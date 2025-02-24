@@ -3,6 +3,8 @@ import cors from "cors"
 import dotenv from "dotenv"
 import connectDB from "./Database/db.config.js"
 import employeeRoutes from "./Routers/employee.Router.js"
+import cron from "./Service/cronJobs.js"
+
 dotenv.config()
 
 
