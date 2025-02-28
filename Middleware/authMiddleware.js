@@ -54,7 +54,7 @@ const authMiddleware = async (req, res, next) => {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         error_code: 401,
-        message: "Token expired. Please login again.",
+        message: "Token expired",
       });
     }
 

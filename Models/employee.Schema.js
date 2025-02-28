@@ -11,10 +11,20 @@ const employeeSchema = mongoose.Schema({
     otp:Number,
     otpExpiry:String,
     personalDetails:Object,
-    casualLeave:Number,
-    leaveDays:Number,
-    permission:String,
-    fcmToken: String
+    casualLeave:{
+        type:Number,
+        default:1
+    },
+    leaveDays:{
+        type:Number,
+        default:0
+    },
+    permission:{
+        type:String,
+        default:"2hrs"
+    },
+    fcmToken: String,
+    imageUrl: String 
 
 })
 

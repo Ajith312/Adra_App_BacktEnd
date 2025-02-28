@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import RequestModel from "../Models/request.Schema.js";
 import { sendNotification } from "../Connfig/notification.js";
+
+
 dotenv.config();
 
 export const userRegister = async (req, res) => {
@@ -19,7 +21,11 @@ export const userRegister = async (req, res) => {
       casualLeave,
       leaveDays,
       permission,
+      imageUrl,
     } = req.body;
+
+  
+
     if (!employeeName || !email || !password || !role) {
       return res.status(402).json({
         message: "missing fields",
@@ -43,6 +49,7 @@ export const userRegister = async (req, res) => {
       casualLeave,
       leaveDays,
       permission,
+      imageUrl
     });
     await newUser.save();
 
@@ -76,7 +83,7 @@ export const userLogin = async (req, res) => {
     }
 
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "4h",
+      expiresIn: "5h",
     });
 
     user.token = token;
@@ -95,19 +102,19 @@ export const userLogin = async (req, res) => {
 };
 
 export const updateFCMToken = async (req, res) => {
-  
   try {
     const { email, fcmToken } = req.body;
-    
+
     if (!email || !fcmToken) {
-      return res.status(400).json({ message: "Email and FCM Token are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and FCM Token are required" });
     }
 
-   
     const user = await EmployeeModel.findOneAndUpdate(
       { email },
       { fcmToken },
-      { new: true } 
+      { new: true }
     );
 
     if (!user) {
@@ -121,19 +128,8 @@ export const updateFCMToken = async (req, res) => {
   }
 };
 
-
 export const getProfileDetails = async (req, res) => {
   try {
-    // const authHeader = req.headers.authorization;
-    // if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    //     return res.status(401).json({
-    //         error_code: 401,
-    //         message: "Token is missing or invalid",
-    //     });
-    // }
-
-    // const token = authHeader.split(" ")[1];
-
     const userId = req.user._id;
 
     const userDetails = await EmployeeModel.findById(
@@ -146,6 +142,7 @@ export const getProfileDetails = async (req, res) => {
         casualLeave: 1,
         leaveDays: 1,
         permission: 1,
+        imageUrl:1
       }
     );
 
@@ -205,7 +202,6 @@ export const requestLeaveAndPermission = async (req, res) => {
       requestDetails: requestDetails,
     });
 
-
     sendNotification(
       manager.fcmToken,
       "New Leave Request",
@@ -240,7 +236,7 @@ export const getManagerRequestsLeaveAndPermissionDetails = async (req, res) => {
 
     const leaveAndPermissionDetails = await RequestModel.aggregate([
       {
-        $match: { managerId: userId, status: "pending" },
+        $match: { managerId: userId, status: "Pending" },
       },
       {
         $lookup: {
@@ -325,7 +321,9 @@ export const getEmployeeLeaveAndPermissionDetails = async (req, res) => {
           "employeeDetails.leaveDays": 1,
           "employeeDetails.permission": 1,
         },
-      },
+      },{
+        $sort:{_id:-1}
+      }
     ]);
 
     return res.status(200).json({
@@ -386,7 +384,7 @@ export const approveRequest = async (req, res) => {
     sendNotification(
       employee.fcmToken,
       "Request Update",
-      `Your request has been ${acceptedStatus}`
+      `Your ${reqData?.requestDetails?.request} request has been ${acceptedStatus}`
     );
 
     if (request.matchedCount === 0) {
@@ -429,7 +427,7 @@ export const getTeamMembersDetails = async (req, res) => {
     }
 
     const teamDetails = await EmployeeModel.find(
-      { managerId: userId },
+      {_id:{$ne:userId} },
       {
         employeeName: 1,
         email: 1,
@@ -437,9 +435,12 @@ export const getTeamMembersDetails = async (req, res) => {
         leaveDays: 1,
         permission: 1,
         casualLeave: 1,
+        imageUrl:1,
         "personalDetails.empRole": 1,
       }
-    );
+    ).sort({employeeName:1});
+
+
     return res.status(200).json({
       error_code: 200,
       message: "Team Details Fetched Succesfully",
@@ -453,3 +454,73 @@ export const getTeamMembersDetails = async (req, res) => {
     });
   }
 };
+
+export const AddMember = async (req, res) => {
+  try {
+  } catch (error) {
+    console.error("Error in getTeamMembersDetails:", error.message);
+    return res.status(500).json({
+      error_code: 500,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const getRefreshToken = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        error_code: 401,
+        message: "Token is missing or invalid",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    try {
+      decoded = jwt.decode(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        error_code: 401,
+        message: "Invalid or expired token",
+      });
+    }
+
+    const user = await EmployeeModel.findById(decoded._id);
+    if (!user) {
+      return res.status(401).json({
+        error_code: 401,
+        message: "Invalid user",
+      });
+    }
+
+    const newToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "5h",
+    });
+
+    return res.status(200).json({
+      error_code: 200,
+      message: "Refresh token sent successfully",
+      token: newToken,
+    });
+  } catch (error) {
+    console.error("Error in getRefreshToken:", error.message);
+    return res.status(500).json({
+      error_code: 500,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+

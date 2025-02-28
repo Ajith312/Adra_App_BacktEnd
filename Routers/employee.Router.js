@@ -1,6 +1,7 @@
 import express from "express"
-import { approveRequest, getEmployeeLeaveAndPermissionDetails, getProfileDetails, getManagerRequestsLeaveAndPermissionDetails, requestLeaveAndPermission, userLogin, userRegister, getTeamMembersDetails, updateFCMToken } from "../Controllers/employee.Controller.js"
+import { approveRequest, getEmployeeLeaveAndPermissionDetails, getProfileDetails, getManagerRequestsLeaveAndPermissionDetails, requestLeaveAndPermission, userLogin, userRegister, getTeamMembersDetails, updateFCMToken, getRefreshToken } from "../Controllers/employee.Controller.js"
 import authMiddleware from "../Middleware/authMiddleware.js"
+
 
 const router = express.Router()
 
@@ -13,5 +14,8 @@ router.get('/get-levaerequest-details',authMiddleware,getManagerRequestsLeaveAnd
 router.post('/approve-request/:id',authMiddleware,approveRequest)
 router.get('/employee-notification-details',authMiddleware,getEmployeeLeaveAndPermissionDetails)
 router.get('/get-team-details',authMiddleware,getTeamMembersDetails)
+router.get('/get-referesh-token',getRefreshToken)
+
+
 
 export default router

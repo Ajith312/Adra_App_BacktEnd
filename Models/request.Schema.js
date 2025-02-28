@@ -7,11 +7,11 @@ const requestSchema = mongoose.Schema({
     requestDetails:Object,
     status: { 
          type: String,
-         default: "pending"
+         default: "Pending"
          },
     acceptedStatus:{
         type:String,
-         default: "pending"
+         default: "Pending"
     } 
 })
 
